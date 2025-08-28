@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wildlife Detection - 3D Scatter Plot</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(120deg, #e0f7fa, #e1bee7);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin-top: 40px;
+      font-size: 2.2rem;
+      color: #333;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .chart-container {
+      width: 90%;
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 30px;
+      background: #ffffffcc;
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #scatter3d {
+      width: 100%;
+      height: 600px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Wildlife Surveillance: 3D Detection Chart</h1>
+
+<div class="chart-container">
+  <div id="scatter3d"></div>
+</div>
+
+<script>
+  // Simulated wildlife detection data
+  const detections = [
+    { time: 1, severity: 10, count: 2, animal: 'Tiger' },
+    { time: 2, severity: 15, count: 4, animal: 'Elephant' },
+    { time: 3, severity: 5,  count: 1, animal: 'Deer' },
+    { time: 4, severity: 20, count: 5, animal: 'Tiger' },
+    { time: 5, severity: 12, count: 3, animal: 'Leopard' },
+    { time: 6, severity: 8,  count: 2, animal: 'Elephant' },
+    { time: 7, severity: 9,  count: 2, animal: 'Deer' }
+  ];
+
+  // Prepare data arrays
+  const x = detections.map(d => d.time);
+  const y = detections.map(d => d.severity);
+  const z = detections.map(d => d.count);
+  const text = detections.map(d => `${d.animal}<br>Severity: ${d.severity}<br>Count: ${d.count}`);
+  const species = detections.map(d => d.animal);
+
+  // Map animal species to color
+  const speciesColors = {
+    'Tiger': '#d32f2f',
+    'Elephant': '#5d4037',
+    'Deer': '#388e3c',
+    'Leopard': '#fbc02d'
+  };
+  const colors = species.map(animal => speciesColors[animal] || '#90a4ae');
+
+  const data = [{
+    x: x,
+    y: y,
+    z: z,
+    text: text,
+    mode: 'markers',
+    type: 'scatter3d',
+    marker: {
+      size: 8,
+      color: colors,
+      line: {
+        width: 1,
+        color: '#333'
+      },
+      opacity: 0.9
+    },
+    hoverinfo: 'text'
+  }];
+
+  const layout = {
+    title: {
+      text: '3D Scatter: Time vs Severity vs Count',
+      font: { size: 22 },
+      xref: 'paper',
+      x: 0.05
+    },
+    margin: {
+      l: 0, r: 0, b: 0, t: 50
+    },
+    scene: {
+      xaxis: { title: 'Time (slot)', backgroundcolor: "#f0f0f0" },
+      yaxis: { title: 'Severity Level', backgroundcolor: "#f0f0f0" },
+      zaxis: { title: 'Animal Count', backgroundcolor: "#f0f0f0" },
+    },
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent'
+  };
+
+  Plotly.newPlot('scatter3d', data, layout);
+</script>
+
+</body>
+</html>

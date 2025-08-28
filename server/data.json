@@ -1,0 +1,72 @@
+[
+  {
+    "Animal": "Tiger",
+    "Cam_id": "Cam1",
+    "Location": "Region A",
+    "Severity": "Vulnerable",
+    "Time": "2025-08-08T07:30:00"
+  },
+  {
+    "Animal": "Elephant",
+    "Cam_id": "Cam2",
+    "Location": "Region B",
+    "Severity": "Endangered",
+    "Time": "2025-08-08T08:10:00"
+  },
+  {
+    "Animal": "Deer",
+    "Cam_id": "Cam3",
+    "Location": "Region C",
+    "Severity": "Least Concern",
+    "Time": "2025-08-08T08:25:00"
+  },
+  {
+    "Animal": "Leopard",
+    "Cam_id": "Cam1",
+    "Location": "Region A",
+    "Severity": "Endangered",
+    "Time": "2025-08-08T09:00:00"
+  },
+  {
+    "Animal": "Tiger",
+    "Cam_id": "Cam4",
+    "Location": "Region D",
+    "Severity": "Vulnerable",
+    "Time": "2025-08-08T09:30:00"
+  },
+  {
+    "Animal": "Bear",
+    "Cam_id": "Cam2",
+    "Location": "Region B",
+    "Severity": "Near Threatened",
+    "Time": "2025-08-08T10:00:00"
+  },
+  {
+    "Animal": "Rhino",
+    "Cam_id": "Cam5",
+    "Location": "Region E",
+    "Severity": "Critically Endangered",
+    "Time": "2025-08-08T10:30:00"
+  },
+  {
+    "Animal": "Deer",
+    "Cam_id": "Cam3",
+    "Location": "Region C",
+    "Severity": "Least Concern",
+    "Time": "2025-08-08T11:00:00"
+  },
+  {
+    "Animal": "Elephant",
+    "Cam_id": "Cam1",
+    "Location": "Region A",
+    "Severity": "Endangered",
+    "Time": "2025-08-08T11:20:00"
+  },
+  {
+    "Animal": "Tiger",
+    "Cam_id": "Cam4",
+    "Location": "Region D",
+    "Severity": "Vulnerable",
+    "Time": "2025-08-08T11:50:00"
+  }
+]
