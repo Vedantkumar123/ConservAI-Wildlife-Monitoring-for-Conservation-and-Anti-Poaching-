@@ -1,0 +1,371 @@
+:root{
+  --bg:#0f1720;
+  --card:#122029;
+  --accent:#1f9a7a;
+  --accent-2:#1f7fb5;
+  --muted:#9aa6a6;
+  --glass: rgba(255,255,255,0.03);
+  --pill-bg: rgba(255,255,255,0.04);
+  --section-pad: 18px;
+}
+
+* { box-sizing: border-box; }
+html,body,#root { height: 100%; margin: 0; font-family: Inter, Roboto, Arial, sans-serif; background: var(--bg); }
+.homepage-root {
+  min-height: 200vh; /* allow two full-view sections */
+  color: #e6f2ef;
+  display: block;
+}
+
+/* PAGE TOP (first 100vh) */
+.page-top {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top Navbar */
+.top-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  background: linear-gradient(90deg, rgba(255,255,255,0.015), transparent);
+}
+.brand {
+  margin: 0;
+  letter-spacing: 2px;
+  font-size: 20px;
+  color: #e9f7f0;
+  text-transform: uppercase;
+}
+.nav-actions {
+  display: flex;
+  gap: 12px;
+}
+.btn {
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #07221b;
+  font-weight: 600;
+  transition: transform .12s;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn.outline {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Main content (camera area + bottom cards) */
+.main-content {
+  flex: 1;
+  padding: 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Camera Section: takes most space */
+.camera-section {
+  display: flex;
+  gap: 18px;
+  flex: 1 1 auto;
+  align-items: stretch;
+}
+
+/* Left large feed (60%) */
+.camera-left {
+  flex: 0 0 60%;
+  position: relative;
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.2));
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.card { box-shadow: 0 6px 18px rgba(2,6,10,0.45); }
+
+/* label like 'Camera Feed' */
+.camera-label {
+  position: absolute;
+  top: 12px;
+  left: 18px;
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(0,0,0,0.35);
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+/* Right side 2x2 grid */
+.camera-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;
+  gap: 12px;
+  height: 100%;
+}
+.small-feed {
+  position: relative;
+  padding: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+/* Video wrapper holds the video and the close button */
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+/* Video styles */
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+  display: block;
+  border-radius: 6px;
+}
+
+/* Ensure large video respects aspect ratio and fills left area */
+.video-large {
+  width: 100%;
+  height: calc(100% - 0px);
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: default;
+}
+
+/* small videos */
+.video-small {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* clickable videos show pointer */
+.clickable { cursor: pointer; }
+
+/* Close button (hidden until wrapper is fullscreen) */
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 50;
+  display: none;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+}
+.close-btn:hover { transform: translateY(-2px); }
+
+/* Show close button when wrapper is fullscreen */
+.video-wrapper:fullscreen .close-btn,
+.video-wrapper:-webkit-full-screen .close-btn {
+  display: block;
+}
+
+/* In fullscreen make the video fit nicely */
+.video-wrapper:fullscreen video,
+.video-wrapper:-webkit-full-screen video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* preserve aspect ratio in fullscreen */
+}
+
+/* fallback / error overlays */
+.video-fallback, .video-error {
+  position: absolute;
+  color: var(--muted);
+  font-size: 14px;
+  background: rgba(0,0,0,0.45);
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+/* PowerBI placeholder section: 1x4 placeholders */
+.powerbi-section {
+  flex: 0 0 auto;
+}
+.powerbi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.powerbi-card {
+  min-height: 78px;
+  background: var(--card);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+.card-placeholder {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+/* PAGE BOTTOM (analytics area) */
+.page-bottom {
+  height: 100vh;
+  padding: 24px;
+  display: flex;
+  align-items: stretch;
+  background: linear-gradient(180deg, rgba(2,6,10,0.02), rgba(0,0,0,0.02));
+}
+
+/* Whole analytics container */
+.analytics-section {
+  width: 100%;
+  display: flex;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.03);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.14));
+}
+
+/* Left and right halves */
+.analytics-left,
+.analytics-right {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Section header with title left and controls right */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+}
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  color: #e9f7f0;
+  font-weight: 600;
+}
+
+/* Pill buttons on right */
+.btn-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+/* Pill buttons: white bg, black text; on hover -> blue bg, white text */
+.small-pill {
+  background: #ffffff;
+  color: #000000;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  border: 1px solid rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease, transform 120ms ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+
+.small-pill:hover,
+.small-pill:focus {
+  background: var(--accent-2); /* blue defined earlier */
+  color: #ffffff;
+  outline: none;
+  transform: translateY(-2px);
+}
+
+/* Optional: show selected/active state */
+.small-pill.active {
+  background: var(--accent-2);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(31,127,181,0.12);
+}
+
+/* Smaller screens adjustments keep the same look */
+@media (max-width: 700px) {
+  .small-pill { padding: 6px 8px; font-size: 12px; }
+}
+
+/* Placeholder area for charts / PowerBI */
+.analytics-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.06));
+  border: 1px dashed rgba(255,255,255,0.03);
+}
+.powerbi-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  background: rgba(255,255,255,0.01);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+/* Responsive: stack columns vertically on smaller screens */
+@media (max-width: 900px) {
+  .camera-section {
+    flex-direction: column;
+  }
+  .camera-left { flex-basis: auto; width: 100%; }
+  .camera-right { width: 100%; }
+  .grid-2x2 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 200px;
+  }
+  .powerbi-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .analytics-section {
+    flex-direction: column;
+  }
+  .analytics-left, .analytics-right {
+    width: 100%;
+  }
+  .page-bottom { padding: 16px; }
+}
+
+/* smaller screens adjust */
+@media (max-width: 700px) {
+  .close-btn { top: 10px; right: 10px; padding: 6px 8px; font-size: 16px; }
+  .section-title { font-size: 16px; }
+  .small-pill { padding: 6px 8px; font-size: 12px; }
+}
