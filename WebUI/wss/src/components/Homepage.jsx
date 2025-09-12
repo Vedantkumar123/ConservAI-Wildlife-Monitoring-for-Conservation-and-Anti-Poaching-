@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "../templates/Homepage.css";
 
+
 export default function Homepage() {
   // refs for five video elements: index 0 = left large, 1-4 = small feeds
   const videoRefs = useRef([]);
@@ -10,6 +11,9 @@ export default function Homepage() {
   const [webcamStream, setWebcamStream] = useState(null);
   const [error, setError] = useState(null);
   const [fullscreenIndex, setFullscreenIndex] = useState(null);
+
+  // ✅ New state to hold annotated YOLO output
+  const [annotatedSrc, setAnnotatedSrc] = useState(null);
 
   // helper to collect refs
   const setVideoRef = (el, idx) => {
@@ -64,6 +68,48 @@ export default function Homepage() {
       }
     });
   }, [webcamStream]);
+
+
+  // ✅ Periodically capture frames from the main video and send to backend
+  useEffect(() => {
+    const video = videoRefs.current[0]; // primary video element
+    if (!video) return;
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const fps = 1; // capture every 1s to reduce load
+
+    const interval = setInterval(async () => {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        // draw video frame onto canvas
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // convert to blob
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          const formData = new FormData();
+          formData.append("file", blob, "frame.jpg");
+
+          try {
+            const res = await fetch("http://localhost:8000/predict", {
+              method: "POST",
+              body: formData,
+            });
+            const data = await res.json();
+            if (data?.status === "ok" && data.annotated_image_b64) {
+              setAnnotatedSrc("data:image/jpeg;base64," + data.annotated_image_b64);
+            }
+          } catch (err) {
+            console.error("Prediction error:", err);
+          }
+        }, "image/jpeg");
+      }
+    }, 1000 / fps);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Fullscreen change handler to detect enter/exit
   useEffect(() => {
@@ -184,6 +230,23 @@ export default function Homepage() {
                   autoPlay
                   aria-label="Primary camera feed - click to fullscreen"
                 />
+
+                {/* ✅ Overlay YOLO annotated image */}
+                {annotatedSrc && (
+                  <img
+                    src={annotatedSrc}
+                    alt="annotated"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      pointerEvents: "none",
+                    }}
+                  />
+                )}
+
                 <button
                   className="close-btn"
                   onClick={(e) => {
@@ -218,6 +281,23 @@ export default function Homepage() {
                           autoPlay
                           aria-label={`Camera feed ${index} - click to fullscreen`}
                         />
+
+                        {/* ✅ Overlay YOLO annotated image */}
+                        {annotatedSrc && (
+                          <img
+                            src={annotatedSrc}
+                            alt="annotated"
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                              pointerEvents: "none",
+                            }}
+                          />
+                        )}
+
                         <button
                           className="close-btn"
                           onClick={(e) => {
