@@ -52,7 +52,7 @@ async def predict(file: UploadFile = File(...), background_tasks: BackgroundTask
         frame_bgr = cv2.cvtColor(frame_np, cv2.COLOR_RGB2BGR)
 
         # Run YOLO prediction
-        results = model(frame_bgr, conf=0.25)
+        results = model(frame_np, conf=0.25)
 
         # Get annotated image (RGB from ultralytics)
         annotated = results[0].plot()

@@ -14,7 +14,7 @@ load_dotenv()
 # It's highly recommended to use environment variables for security
 SENDER_EMAIL = os.getenv("SENDER_EMAIL", "saptarshiironman4512@gmail.com")
 SENDER_PASSWORD = os.getenv("SENDER_APP_PASSWORD", "tldulfbbhlvhliuu")
-RECIPIENT_EMAIL = "saptarshiironman4512@gmail.com"
+RECIPIENT_EMAIL = ""
 
 # --- NEW: Rate Limiting / Cooldown Configuration ---
 # Set the cooldown period to 1 minute

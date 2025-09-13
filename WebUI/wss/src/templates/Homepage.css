@@ -369,3 +369,25 @@ video {
   .section-title { font-size: 16px; }
   .small-pill { padding: 6px 8px; font-size: 12px; }
 }
+
+/* --- FIX FOR ANNOTATIONS AND LAYOUT --- */
+
+/* This is the key fix for the enlarging video issue. It creates a 
+  positioning context for the absolutely positioned overlay image.
+*/
+.video-wrapper {
+  position: relative;
+}
+
+/* This styles the annotation overlay image to perfectly fit on top of the video.
+*/
+.annotation-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Allows clicks to go through to the video below */
+  object-fit: cover;   /* Ensures the overlay fills the entire video frame */
+  border-radius: 6px;  /* Match the video's border-radius */
+}

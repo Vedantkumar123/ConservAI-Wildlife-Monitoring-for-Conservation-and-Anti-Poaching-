@@ -2,151 +2,88 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "../templates/Homepage.css";
 
+// Import your five video files
+import videoSource1 from "D:/WORK/project 1/WebUI/wss/src/assets/videos/video1.mp4";
+import videoSource2 from "D:/WORK/project 1/WebUI/wss/src/assets/videos/video2.mp4";
+import videoSource3 from "D:/WORK/project 1/WebUI/wss/src/assets/videos/video3.mp4";
+import videoSource4 from "D:/WORK/project 1/WebUI/wss/src/assets/videos/video4.mp4";
+import videoSource5 from "D:/WORK/project 1/WebUI/wss/src/assets/videos/video5.mp4";
+// The URL for your backend prediction service
+const PREDICTION_API_URL = "http://localhost:8000/predict";
 
 export default function Homepage() {
-  // refs for five video elements: index 0 = left large, 1-4 = small feeds
   const videoRefs = useRef([]);
   videoRefs.current = videoRefs.current.slice(0, 5);
+  const workersRef = useRef([]);
 
-  const [webcamStream, setWebcamStream] = useState(null);
-  const [error, setError] = useState(null);
   const [fullscreenIndex, setFullscreenIndex] = useState(null);
+  const [annotatedSrcs, setAnnotatedSrcs] = useState({});
 
-  // ✅ New state to hold annotated YOLO output
-  const [annotatedSrc, setAnnotatedSrc] = useState(null);
+  const videoSources = [videoSource1, videoSource2, videoSource3, videoSource4, videoSource5];
 
-  // helper to collect refs
   const setVideoRef = (el, idx) => {
     videoRefs.current[idx] = el;
   };
 
-  // Request webcam stream once on mount
   useEffect(() => {
-    let mounted = true;
-    async function startCamera() {
-      try {
-        const s = await navigator.mediaDevices.getUserMedia({
-          video: { width: 1280, height: 720 },
-          audio: false,
-        });
-        if (!mounted) {
-          s.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        setWebcamStream(s);
+    // Initialize one worker per video source
+    workersRef.current = videoSources.map(() => new Worker('/detection.worker.js'));
 
-        // Attach stream to any mounted video refs
-        videoRefs.current.forEach((v) => {
-          if (v) {
-            v.srcObject = s;
-            v.play().catch(() => {});
-          }
-        });
-      } catch (err) {
-        console.error("getUserMedia error:", err);
-        setError("Unable to access webcam. Check permissions or device.");
-      }
-    }
-    startCamera();
+    workersRef.current.forEach((worker, index) => {
+      worker.onmessage = (event) => {
+        const { annotatedSrc, index: workerIndex } = event.data;
+        setAnnotatedSrcs(prevSrcs => ({
+          ...prevSrcs,
+          [workerIndex]: annotatedSrc,
+        }));
+      };
+    });
 
     return () => {
-      mounted = false;
-      if (webcamStream) {
-        webcamStream.getTracks().forEach((t) => t.stop());
-      }
+      workersRef.current.forEach(worker => worker.terminate());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once
+  }, []);
 
-  // ensure newly-mounted video elements get the stream
   useEffect(() => {
-    if (!webcamStream) return;
-    videoRefs.current.forEach((v) => {
-      if (v && v.srcObject !== webcamStream) {
-        v.srcObject = webcamStream;
-        v.play().catch(() => {});
-      }
-    });
-  }, [webcamStream]);
-
-
-  // ✅ Periodically capture frames from the main video and send to backend
-  useEffect(() => {
-    const video = videoRefs.current[0]; // primary video element
-    if (!video) return;
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const fps = 1; // capture every 1s to reduce load
-
-    const interval = setInterval(async () => {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        // draw video frame onto canvas
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // convert to blob
-        canvas.toBlob(async (blob) => {
-          if (!blob) return;
-          const formData = new FormData();
-          formData.append("file", blob, "frame.jpg");
-
+    const fps = 1;
+    const interval = setInterval(() => {
+      videoRefs.current.forEach(async (video, index) => {
+        if (video && !video.paused && video.readyState >= 3) {
           try {
-            const res = await fetch("http://localhost:8000/predict", {
-              method: "POST",
-              body: formData,
-            });
-            const data = await res.json();
-            if (data?.status === "ok" && data.annotated_image_b64) {
-              setAnnotatedSrc("data:image/jpeg;base64," + data.annotated_image_b64);
-            }
+            const imageBitmap = await createImageBitmap(video);
+            workersRef.current[index].postMessage(
+              { imageData: imageBitmap, index: index, apiUrl: PREDICTION_API_URL },
+              [imageBitmap]
+            );
           } catch (err) {
-            console.error("Prediction error:", err);
+            console.error(`Error processing frame for video ${index}:`, err);
           }
-        }, "image/jpeg");
-      }
+        }
+      });
     }, 1000 / fps);
-
     return () => clearInterval(interval);
   }, []);
 
-  // Fullscreen change handler to detect enter/exit
+  // --- Fullscreen logic (unchanged) ---
   useEffect(() => {
     function onFullScreenChange() {
       const elem = document.fullscreenElement || document.webkitFullscreenElement;
       if (!elem) {
-        // Exited fullscreen
         setFullscreenIndex(null);
-        // Ensure all video elements resume playing after exit
-        videoRefs.current.forEach((v) => {
-          if (v) {
-            v.play().catch(() => {});
-          }
-        });
+        videoRefs.current.forEach((v) => v?.play().catch(() => {}));
         document.body.style.overflow = "";
       } else {
-        // Find which video index is contained in the fullscreen element
         const foundIndex = videoRefs.current.findIndex((v) => v && elem.contains(v));
         if (foundIndex >= 0) {
           setFullscreenIndex(foundIndex);
-          // Make sure the fullscreen video plays
-          const v = videoRefs.current[foundIndex];
-          if (v) v.play().catch(() => {});
-          // Also keep other videos playing as well (some browsers may pause)
-          videoRefs.current.forEach((otherV) => {
-            if (otherV && otherV !== v) {
-              otherV.play().catch(() => {});
-            }
-          });
+          videoRefs.current.forEach((v) => v?.play().catch(() => {}));
           document.body.style.overflow = "hidden";
         } else {
-          // Fullscreen element is not a video wrapper we control
           setFullscreenIndex(null);
         }
       }
     }
-
     document.addEventListener("fullscreenchange", onFullScreenChange);
     document.addEventListener("webkitfullscreenchange", onFullScreenChange);
     return () => {
@@ -154,55 +91,27 @@ export default function Homepage() {
       document.removeEventListener("webkitfullscreenchange", onFullScreenChange);
     };
   }, []);
-
-  // Enter fullscreen for the clicked feed (use its wrapper so the close button is visible)
   const enterFullscreen = async (idx) => {
     const v = videoRefs.current[idx];
-    if (!v) return;
-    // use the video wrapper (parentElement) for fullscreen so close button is included
-    const wrapper = v.parentElement;
+    const wrapper = v?.parentElement;
     if (!wrapper) return;
-
     try {
-      // requestFullscreen on wrapper (user gesture from click)
-      if (wrapper.requestFullscreen) {
-        await wrapper.requestFullscreen();
-      } else if (wrapper.webkitRequestFullscreen) {
-        // Safari/older webkit
-        wrapper.webkitRequestFullscreen();
-      } else if (v.requestFullscreen) {
-        // fallback to video element itself
-        await v.requestFullscreen();
-      }
-      // play to ensure playback continues
-      v.play().catch(() => {});
-      // ensure others play too
-      videoRefs.current.forEach((ov) => {
-        if (ov && ov !== v) ov.play().catch(() => {});
-      });
-    } catch (err) {
-      console.error("Fullscreen request failed:", err);
-    }
+      if (wrapper.requestFullscreen) await wrapper.requestFullscreen();
+      else if (wrapper.webkitRequestFullscreen) wrapper.webkitRequestFullscreen();
+      videoRefs.current.forEach((ov) => ov?.play().catch(() => {}));
+    } catch (err) { console.error("Fullscreen request failed:", err); }
   };
-
-  // Exit fullscreen
   const exitFullscreen = async () => {
     try {
       if (document.fullscreenElement || document.webkitFullscreenElement) {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        }
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       }
-    } catch (err) {
-      console.error("Error exiting fullscreen:", err);
-    }
+    } catch (err) { console.error("Error exiting fullscreen:", err); }
   };
 
   return (
     <div className="homepage-root">
-      {/* Top section: cameras + powerbi cards -> occupies 100vh */}
       <div className="page-top">
         <nav className="top-navbar">
           <h1 className="brand">Wildlife Surveillance System</h1>
@@ -215,100 +124,45 @@ export default function Homepage() {
             </Link>
           </div>
         </nav>
-
         <main className="main-content">
           <section className="camera-section">
             <div className="camera-left card">
               <div className="camera-label">Camera Feed</div>
-
               <div className="video-wrapper" onClick={() => enterFullscreen(0)}>
                 <video
                   ref={(el) => setVideoRef(el, 0)}
+                  src={videoSources[0]}
                   className="video-large clickable"
-                  muted
-                  playsInline
-                  autoPlay
-                  aria-label="Primary camera feed - click to fullscreen"
+                  muted playsInline autoPlay loop
                 />
-
-                {/* ✅ Overlay YOLO annotated image */}
-                {annotatedSrc && (
-                  <img
-                    src={annotatedSrc}
-                    alt="annotated"
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      pointerEvents: "none",
-                    }}
-                  />
+                {annotatedSrcs[0] && (
+                  <img src={annotatedSrcs[0]} alt="annotated" className="annotation-overlay" />
                 )}
-
                 <button
-                  className="close-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    exitFullscreen();
-                  }}
-                  aria-hidden={fullscreenIndex !== 0 ? "true" : "false"}
-                  title="Close fullscreen"
-                >
-                  ✕
-                </button>
+                  className="close-btn" onClick={(e) => { e.stopPropagation(); exitFullscreen(); }}
+                  aria-hidden={fullscreenIndex !== 0} title="Close fullscreen"
+                >✕</button>
               </div>
-
-              {!webcamStream && !error && (
-                <div className="video-fallback">Starting camera...</div>
-              )}
-              {error && <div className="video-error">{error}</div>}
             </div>
-
             <div className="camera-right">
               <div className="grid-2x2">
-                {[1, 2, 3, 4].map((i) => {
-                  const index = i; // map 1..4 to indexes 1..4
+                {videoSources.slice(1).map((videoSrc, i) => {
+                  const index = i + 1;
                   return (
-                    <div key={i} className="small-feed card">
+                    <div key={index} className="small-feed card">
                       <div className="video-wrapper" onClick={() => enterFullscreen(index)}>
                         <video
                           ref={(el) => setVideoRef(el, index)}
-                          className="video-small clickable"
-                          muted
-                          playsInline
-                          autoPlay
-                          aria-label={`Camera feed ${index} - click to fullscreen`}
+                          src={videoSrc} className="video-small clickable"
+                          muted playsInline autoPlay loop
                         />
-
-                        {/* ✅ Overlay YOLO annotated image */}
-                        {annotatedSrc && (
-                          <img
-                            src={annotatedSrc}
-                            alt="annotated"
-                            style={{
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                              width: "100%",
-                              height: "100%",
-                              pointerEvents: "none",
-                            }}
-                          />
+                        {annotatedSrcs[index] && (
+                          <img src={annotatedSrcs[index]} alt="annotated" className="annotation-overlay" />
                         )}
-
                         <button
-                          className="close-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            exitFullscreen();
-                          }}
-                          aria-hidden={fullscreenIndex !== index ? "true" : "false"}
-                          title="Close fullscreen"
-                        >
-                          ✕
-                        </button>
+                          className="close-btn" onClick={(e) => { e.stopPropagation(); exitFullscreen(); }}
+                          aria-hidden={fullscreenIndex !== index} title="Close fullscreen"
+                        >✕</button>
                       </div>
                     </div>
                   );
@@ -316,7 +170,6 @@ export default function Homepage() {
               </div>
             </div>
           </section>
-
           <section className="powerbi-section">
             <div className="powerbi-grid">
               {[1, 2, 3, 4].map((i) => (
@@ -328,8 +181,6 @@ export default function Homepage() {
           </section>
         </main>
       </div>
-
-      {/* Bottom section: analytics area -> occupies next 100vh (makes total ~200vh) */}
       <div className="page-bottom">
         <div className="analytics-section card">
           <div className="analytics-left">
@@ -341,20 +192,15 @@ export default function Homepage() {
                 <button className="small-pill">Monthly</button>
               </div>
             </div>
-
             <div className="analytics-placeholder">
-              {/* Space reserved for Power BI / chart integration */}
               <div className="powerbi-placeholder">Species distribution Power BI / Chart placeholder</div>
             </div>
           </div>
-
           <div className="analytics-right">
             <div className="section-header">
               <h3 className="section-title">Activity Timeline</h3>
             </div>
-
             <div className="analytics-placeholder">
-              {/* Space reserved for Power BI / timeline integration */}
               <div className="powerbi-placeholder">Activity timeline Power BI / Chart placeholder</div>
             </div>
           </div>
