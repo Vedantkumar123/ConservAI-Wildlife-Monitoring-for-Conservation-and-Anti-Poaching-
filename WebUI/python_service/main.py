@@ -95,7 +95,7 @@ async def predict(file: UploadFile = File(...), background_tasks: BackgroundTask
                         confidence=conf,
                         timestamp=datetime.now()
                     )
-                    time.sleep(15)
+                    
 
         return JSONResponse({
             "status": "ok",
