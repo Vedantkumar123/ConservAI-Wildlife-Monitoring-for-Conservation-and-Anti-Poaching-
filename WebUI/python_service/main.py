@@ -1,5 +1,6 @@
 # python_service/main.py
-from fastapi import FastAPI, UploadFile, File
+# --- MODIFIED IMPORTS ---
+from fastapi import FastAPI, UploadFile, File, BackgroundTasks # Add BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
@@ -9,42 +10,43 @@ from ultralytics import YOLO
 import uvicorn
 from PIL import Image
 import io
+from datetime import datetime # Add datetime for timestamping
+from smtp_server import send_alert_email # Import our new function
+import time
 
 app = FastAPI()
 
-# --- Add CORS ---
+# --- Add CORS (No changes here) ---
 origins = [
-    "http://localhost:3000",   # React dev server
-    "http://127.0.0.1:3000",   # Alternate localhost
-    # "http://yourdomain.com"  # add if you deploy frontend separately
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
-
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=origins,       # or ["*"] to allow all origins (not safe for prod)
-    allow_origins=["*"],   # or ["http://localhost:3000"] for stricter security
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Load your YOLO model once
+# Load your YOLO model once (No changes here)
 MODEL_PATH = "best_poacher.pt"
 model = YOLO(MODEL_PATH)
 
-def encode_image_to_base64(img_bgr):
+def encode_image_to_base64(img_bgr): # (No changes here)
     ret, buf = cv2.imencode(".jpg", img_bgr, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
     if not ret:
         raise RuntimeError("Failed to encode image")
     return base64.b64encode(buf.tobytes()).decode("utf-8")
 
+# --- MODIFIED PREDICT ENDPOINT ---
 @app.post("/predict")
-async def predict(file: UploadFile = File(...)):
+async def predict(file: UploadFile = File(...), background_tasks: BackgroundTasks = BackgroundTasks()):
     try:
         # Read image from uploaded file
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
-        frame_np = np.array(image)  # RGB numpy array
+        frame_np = np.array(image)
 
         # Convert RGB → BGR for OpenCV/YOLO
         frame_bgr = cv2.cvtColor(frame_np, cv2.COLOR_RGB2BGR)
@@ -58,13 +60,18 @@ async def predict(file: UploadFile = File(...)):
         # Convert back to BGR for encoding
         annotated_bgr = cv2.cvtColor(annotated, cv2.COLOR_RGB2BGR)
 
-        # Encode to base64
+        # Encode to base64 for JSON response
         annotated_b64 = encode_image_to_base64(annotated_bgr)
 
         # Collect detections
         detections = []
         boxes = results[0].boxes
         if boxes is not None:
+            # --- NEW: Prepare image bytes for potential email attachment ---
+            # We do this once before the loop for efficiency
+            ret, buf = cv2.imencode(".jpg", annotated_bgr)
+            image_bytes_for_email = buf.tobytes() if ret else None
+
             for box in boxes:
                 xyxy = box.xyxy[0].tolist()
                 conf = float(box.conf[0])
@@ -76,6 +83,19 @@ async def predict(file: UploadFile = File(...)):
                     "class_id": cls,
                     "label": label
                 })
+
+                # --- NEW: TRIGGER EMAIL ALERT ON DETECTION ---
+                if label.lower() in ["weapon", "poacher"] and image_bytes_for_email:
+                    print(f"Threat detected: '{label}'. Adding email alert to background tasks.")
+                    # Add the email sending task to run in the background
+                    background_tasks.add_task(
+                        send_alert_email,
+                        image_bytes=image_bytes_for_email,
+                        label=label,
+                        confidence=conf,
+                        timestamp=datetime.now()
+                    )
+                    time.sleep(15)
 
         return JSONResponse({
             "status": "ok",
