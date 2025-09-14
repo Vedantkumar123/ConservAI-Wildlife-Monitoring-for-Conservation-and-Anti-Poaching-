@@ -13,7 +13,7 @@
 body { margin: 0; font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
 
 .detection-trends-root {
-  height: 100vh;
+  height: 110vh;
   padding: 18px;
   background: linear-gradient(180deg, #061018 0%, var(--bg) 100%);
   color: #e6f0f3;
@@ -34,7 +34,7 @@ body { margin: 0; font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Aria
 
 /* Top section - 40vh */
 .dt-top {
-  height: 40vh;
+  height: 60vh;
   display: flex;
   gap: 18px;
   align-items: stretch;
@@ -164,9 +164,9 @@ body { margin: 0; font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Aria
   flex-shrink: 0;
 }
 
-/* Bottom section - 60vh */
+/* Bottom section - 90vh */
 .dt-bottom {
-  height: 60vh;
+  height: 90vh;
   display: flex;
   flex-direction: column;
   gap: 12px;

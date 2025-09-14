@@ -93,7 +93,7 @@ html, body, #root {
 .intro h2 { margin: 0; font-size: 18px; color: #eef6f3; }
 .intro p { margin: 0; color: var(--muted); font-size: 13px; }
 
-/* GRID 3x5 (3 columns, wraps to rows) */
+/* GRID 3x6 (3 columns, wraps to rows) */
 .card-grid {
   margin-top: 16px;
   display: grid;
@@ -177,6 +177,31 @@ html, body, #root {
   color: #e9f5f1;
   border-color: rgba(255,255,255,0.06);
 }
+
+/* Fullscreen Modal */
+.fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  cursor: pointer;
+}
+
+.fullscreen-img {
+  max-width: 70%;
+  max-height: 70%;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+  cursor: default;
+  transition: transform 0.25s ease;
+}
+.fullscreen-img:hover {
+  transform: scale(1.02);
+}
+
 
 /* Footer */
 .faq-footer {
