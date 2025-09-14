@@ -1,39 +1,125 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import '../templates/DetectionTrends.css';
 
-const sampleAlerts = [
-  { id: 1, title: 'New species detected', subtitle: 'Trail cam - Camera 3', time: '10 minutes ago' },
-  { id: 2, title: 'High activity detected', subtitle: 'Water Point - Camera 2', time: '30 minutes ago' },
-  { id: 3, title: 'Camera maintenance', subtitle: 'Camera 1 - Connection lost', time: '2 hours ago' },
-];
-
-const sampleDetections = [
-  { time: '01:15:08', camera: 'Camera 3 - East Plains', species: 'Leopard', count: 1, confidence: 86 },
-  { time: '01:07:27', camera: 'Camera 2 - Water Point', species: 'Zebra', count: 1, confidence: 82 },
-  { time: '23:33:40', camera: 'Camera 2 - Water Point', species: 'Zebra', count: 4, confidence: 81 },
-  { time: '22:33:47', camera: 'Camera 4 - South Ridge', species: 'Red Fox', count: 2, confidence: 84 },
-];
+// Utility: get current date + time in "YYYY-MM-DD HH:mm:ss"
+function getCurrentDateTime() {
+  const now = new Date();
+  const date = now.toISOString().split("T")[0]; // "YYYY-MM-DD"
+  const time = now.toLocaleTimeString('en-GB', { hour12: false }); // "HH:MM:SS"
+  return `${date} ${time}`;
+}
 
 export default function DetectionTrends() {
+  const [alerts, setAlerts] = useState(() => {
+    const saved = localStorage.getItem("alerts");
+    return saved ? JSON.parse(saved).slice(0, 3) : [];
+  });
+
+  const [detections, setDetections] = useState(() => {
+    const saved = localStorage.getItem("detections");
+    return saved ? JSON.parse(saved).slice(-5) : [];
+  });
+
+  // Save alerts & detections in localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("alerts", JSON.stringify(alerts));
+  }, [alerts]);
+
+  useEffect(() => {
+    localStorage.setItem("detections", JSON.stringify(detections));
+  }, [detections]);
+
+  // Poll for new detections every 2 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("http://localhost:8000/predict-latest");
+        if (!res.ok) {
+          throw new Error('Failed to fetch latest detections');
+        }
+        const data = await res.json();
+
+        // Process new detections from the backend
+        if (data.status === "ok" && data.detections.length > 0) {
+          const now = getCurrentDateTime();
+          const newRows = [];
+
+          // Group detections by species (from label) and camera
+          const grouped = {};
+          data.detections.forEach(det => {
+            const key = `${det.label}-${det.camera}`;
+            if (!grouped[key]) {
+              grouped[key] = {
+                time: now,
+                camera: `Camera ${det.camera}`,
+                species: det.label,
+                count: 0,
+                confidence: Math.round(det.confidence * 100),
+              };
+            }
+            grouped[key].count += 1;
+          });
+
+          // Add new rows only if they're different from the last entry
+          Object.values(grouped).forEach(entry => {
+            const lastRow = detections[detections.length - 1];
+            if (
+              !lastRow ||
+              lastRow.species !== entry.species ||
+              lastRow.camera !== entry.camera ||
+              lastRow.count !== entry.count ||
+              lastRow.confidence !== entry.confidence
+            ) {
+              newRows.push(entry);
+
+              // If a poacher is detected, create and push an alert
+              if (entry.species.toLowerCase() === "poacher") {
+                setAlerts(prev => {
+                  const updated = [
+                    {
+                      title: "🚨 Poacher Detected!",
+                      subtitle: `${entry.camera}`,
+                      time: now
+                    },
+                    ...prev
+                  ];
+                  return updated.slice(0, 3); // keep only last 3 alerts
+                });
+              }
+            }
+          });
+
+          if (newRows.length > 0) {
+            setDetections(prev => {
+              const updated = [...prev, ...newRows];
+              return updated.slice(-5); // keep only last 5 detections
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Detection poll error:", err);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [detections]);
+
   return (
     <div className="detection-trends-root">
+      {/* Navbar */}
+      <div className='navbar'>
+        <Link to="/" className="btn">Home</Link>
+      </div>
+
       {/* Top: 40vh */}
-
-
-      <div className='navbar'><Link to="/" className="btn">Home</Link></div>
-
-
       <div className="dt-top">
         <div className="dt-left-card">
           <div className="card-header">
             <h2 className="card-title">Detection Trends</h2>
             <div className="card-sub">Daily detections overview</div>
           </div>
-
-          {/* Chart / Power BI placeholder */}
-          <div className="powerbi-embed chart-placeholder" role="region" aria-label="Detection trends chart placeholder">
-            {/* Replace this div's contents with Power BI embed or chart component */}
+          <div className="powerbi-embed chart-placeholder">
             <div className="placeholder-msg">Chart / Power BI embed placeholder</div>
           </div>
         </div>
@@ -45,8 +131,11 @@ export default function DetectionTrends() {
           </div>
 
           <div className="alerts-list">
-            {sampleAlerts.map((a) => (
-              <div className="alert-item" key={a.id}>
+            {alerts.length === 0 && (
+              <div className="placeholder-msg">No alerts yet</div>
+            )}
+            {alerts.slice(0, 3).map((a, idx) => (
+              <div className="alert-item" key={idx}>
                 <div className="alert-side" aria-hidden="true" />
                 <div className="alert-content">
                   <div className="alert-title">{a.title}</div>
@@ -67,7 +156,6 @@ export default function DetectionTrends() {
         </div>
 
         <div className="recent-detections-card">
-          {/* Optional: if you want to embed Power BI instead of table, replace this table area */}
           <div className="table-wrapper">
             <table className="detections-table" role="table" aria-label="Recent detections table">
               <thead>
@@ -81,13 +169,16 @@ export default function DetectionTrends() {
                 </tr>
               </thead>
               <tbody>
-                {sampleDetections.map((d, idx) => (
+                {detections.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="placeholder-msg">No detections yet</td>
+                  </tr>
+                )}
+                {detections.map((d, idx) => (
                   <tr key={idx}>
                     <td>{d.time}</td>
                     <td>{d.camera}</td>
-                    <td>
-                      <span className="species-pill">{d.species}</span>
-                    </td>
+                    <td><span className="species-pill">{d.species}</span></td>
                     <td>{d.count}</td>
                     <td>
                       <div className="conf-bar">
@@ -95,9 +186,7 @@ export default function DetectionTrends() {
                         <span className="conf-text">{d.confidence}%</span>
                       </div>
                     </td>
-                    <td>
-                      <button className="view-btn">View</button>
-                    </td>
+                    <td><button className="view-btn">View</button></td>
                   </tr>
                 ))}
               </tbody>
