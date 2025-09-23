@@ -56,14 +56,6 @@ class C2f(nn.Module):
         out = self.conv2(outputs)
         return out
 
-# sanity check
-# c2f = C2f(in_channels=64,out_channels=128,num_bottlenecks=2)
-# print(f"{sum(p.numel() for p in c2f.parameters())/1e6} million parameters")
-
-# dummy_input = torch.rand((1,64,244,244))
-# dummy_output = c2f(dummy_input)
-# print("Output shape: ",dummy_output.shape)
-
 
 class SPPF(nn.Module):
     def __init__(self,in_channels,out_channels,kernal_size=5):
