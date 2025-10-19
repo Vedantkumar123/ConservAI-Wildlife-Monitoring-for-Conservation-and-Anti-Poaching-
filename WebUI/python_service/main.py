@@ -1,4 +1,5 @@
 # python_service/main.py
+
 # --- MODIFIED IMPORTS ---
 from fastapi import FastAPI, UploadFile, File, BackgroundTasks
 from fastapi.responses import JSONResponse
@@ -11,10 +12,11 @@ import uvicorn
 from PIL import Image
 import io
 from datetime import datetime
+
+# --- LOCAL IMPORTS ---
 from smtp_server import send_alert_email
-from pymongo import MongoClient
-from bson import ObjectId
-import json
+# Import the new function to handle saving detections
+from database_utils import save_detection
 
 # -------------------------
 # FastAPI App Initialization
@@ -40,21 +42,10 @@ app.add_middleware(
 MODEL_PATH = "best_poacher.pt"
 model = YOLO(MODEL_PATH)
 
-# --- NEW: Global variable to store latest detections ---
+# --- Global variable to store latest detections for the polling endpoint ---
 latest_detections = []
 
-# -------------------------
-# MongoDB Connection
-# -------------------------
-MONGO_URI = "mongodb+srv://user3:12345@projectalexdb.noggc5o.mongodb.net/"
-DATABASE_NAME = "ProjectAlex"
-COLLECTION_NAME = "user3"
-
-client = MongoClient(MONGO_URI)
-db = client[DATABASE_NAME]
-collection = db[COLLECTION_NAME]
-
-
+# --- Helper Function ---
 def encode_image_to_base64(img_bgr):
     """Convert OpenCV image to base64 string"""
     ret, buf = cv2.imencode(".jpg", img_bgr, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
@@ -74,7 +65,6 @@ async def predict(file: UploadFile = File(...), background_tasks: BackgroundTask
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
         frame_np = np.array(image)
-        frame_bgr = cv2.cvtColor(frame_np, cv2.COLOR_RGB2BGR)
 
         # Run YOLO prediction
         results = model(frame_np, conf=0.25)
@@ -82,7 +72,7 @@ async def predict(file: UploadFile = File(...), background_tasks: BackgroundTask
         annotated_bgr = cv2.cvtColor(annotated, cv2.COLOR_RGB2BGR)
         annotated_b64 = encode_image_to_base64(annotated_bgr)
 
-        detections = []
+        current_frame_detections = []
         boxes = results[0].boxes
         if boxes is not None:
             ret, buf = cv2.imencode(".jpg", annotated_bgr)
@@ -94,26 +84,22 @@ async def predict(file: UploadFile = File(...), background_tasks: BackgroundTask
                 cls = int(box.cls[0])
                 label = model.names[cls]
 
-                # -------------------------
-                # Prepare Detection Object
-                # -------------------------
+                # --- Prepare Detection Object ---
+                # This dictionary holds all the information for the database
                 detection_data = {
-                    "_id": ObjectId(),  # Auto-generate ObjectId
-                    "Animal": label if label else None,
-                    "Cam_id": "Cam1",  # Replace with dynamic ID if available
-                    "Location": "Region A",  # Replace with real location if available
-                    "Severity": "Vulnerable" if label.lower() == "tiger" else None,
-                    "Time": datetime.utcnow().isoformat()
+                    "Animal": label,
+                    "Cam_id": "Cam1",          # Replace with dynamic ID if available
+                    "Location": "Region A",      # Replace with real location if available
+                    "Severity": "Vulnerable" if label.lower() == "tiger" else "Threat" if label.lower() in ["weapon", "poacher"] else "Monitored",
+                    # The timestamp will be set inside the save function for accuracy
                 }
 
-                # Insert into MongoDB
-                collection.insert_one(detection_data)
+                # --- SAVE TO DATABASE (with duplicate check) ---
+                # Call the refactored function from database_utils.py
+                save_detection(detection_data)
 
-                # ✅ Print to terminal in readable format
-                print("\n📌 New Detection Inserted into MongoDB:")
-                print(json.dumps(detection_data, indent=4, default=str))
-
-                detections.append({
+                # Append details for the API response
+                current_frame_detections.append({
                     "box": xyxy,
                     "confidence": conf,
                     "class_id": cls,
@@ -131,11 +117,11 @@ async def predict(file: UploadFile = File(...), background_tasks: BackgroundTask
                         timestamp=datetime.now()
                     )
 
-        latest_detections = detections
+        latest_detections = current_frame_detections
 
         return JSONResponse({
             "status": "ok",
-            "detections": detections,
+            "detections": current_frame_detections,
             "annotated_image_b64": annotated_b64
         })
 
@@ -147,7 +133,7 @@ async def predict(file: UploadFile = File(...), background_tasks: BackgroundTask
 
 
 # -------------------------
-# Get Latest Detection
+# Get Latest Detection Endpoint
 # -------------------------
 @app.get("/predict-latest")
 async def predict_latest():
