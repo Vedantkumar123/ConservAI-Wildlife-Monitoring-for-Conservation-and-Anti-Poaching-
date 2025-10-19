@@ -1,6 +1,8 @@
 Architecture/*.pt
 Architecture/runs/
+Dataset/Test_dataset
 .vscode
 .dist
 *.config
 *__pycache__
+
