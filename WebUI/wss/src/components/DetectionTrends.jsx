@@ -74,11 +74,11 @@ export default function DetectionTrends() {
               newRows.push(entry);
 
               // If a poacher is detected, create and push an alert
-              if (entry.species.toLowerCase() === "poacher") {
+              if (entry.species.toLowerCase() === "poacher" || "weapon") {
                 setAlerts(prev => {
                   const updated = [
                     {
-                      title: "🚨 Poacher Detected!",
+                      title: "🚨 Poacher or Weapon Detected!",
                       subtitle: `${entry.camera}`,
                       time: now
                     },
