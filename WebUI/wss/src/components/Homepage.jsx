@@ -322,10 +322,15 @@ export default function Homepage() {
                 <button className="small-pill">Monthly</button>
               </div>
             </div>
-
             <div className="analytics-placeholder">
-              {/* Space reserved for Power BI / chart integration */}
-              <div className="powerbi-placeholder">Species distribution Power BI / Chart placeholder</div>
+              <iframe
+                title="Power_bi_file"
+                width="600"
+                height="373.5"
+                src="https://app.powerbi.com/view?r=eyJrIjoiNjNmZmExZjItMmU5Yi00NzFjLTg4MTYtNjRjMWY2MWYzY2UwIiwidCI6ImEyNDVhYTNhLWU4YjAtNGIyMy05NmM1LTUyMjQyMjM2OGRjNCJ9&pageName=7b77ee0a590a7409dbc0"
+                frameBorder="0"
+                allowFullScreen
+              ></iframe>
             </div>
           </div>
 
@@ -333,10 +338,15 @@ export default function Homepage() {
             <div className="section-header">
               <h3 className="section-title">Activity Timeline</h3>
             </div>
-
             <div className="analytics-placeholder">
-              {/* Space reserved for Power BI / timeline integration */}
-              <div className="powerbi-placeholder">Activity timeline Power BI / Chart placeholder</div>
+              <iframe
+                title="Power_bi_file"
+                width="600"
+                height="373.5"
+                src="https://app.powerbi.com/view?r=eyJrIjoiNjNmZmExZjItMmU5Yi00NzFjLTg4MTYtNjRjMWY2MWYzY2UwIiwidCI6ImEyNDVhYTNhLWU4YjAtNGIyMy05NmM1LTUyMjQyMjM2OGRjNCJ9&pageName=9d0f754aa63b331842d5"
+                frameBorder="0"
+                allowFullScreen
+              ></iframe>
             </div>
           </div>
         </div>

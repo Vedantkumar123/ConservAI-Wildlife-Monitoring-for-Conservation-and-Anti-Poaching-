@@ -120,7 +120,14 @@ export default function DetectionTrends() {
             <div className="card-sub">Daily detections overview</div>
           </div>
           <div className="powerbi-embed chart-placeholder">
-            <div className="placeholder-msg">Chart / Power BI embed placeholder</div>
+            <iframe
+              title="Power_bi_file"
+              width="600"
+              height="373.5"
+              src="https://app.powerbi.com/view?r=eyJrIjoiNjNmZmExZjItMmU5Yi00NzFjLTg4MTYtNjRjMWY2MWYzY2UwIiwidCI6ImEyNDVhYTNhLWU4YjAtNGIyMy05NmM1LTUyMjQyMjM2OGRjNCJ9&pageName=d8db1cc18fd6ad3b2b6c"
+              frameBorder="0"
+              allowFullScreen
+            ></iframe>
           </div>
         </div>
 
