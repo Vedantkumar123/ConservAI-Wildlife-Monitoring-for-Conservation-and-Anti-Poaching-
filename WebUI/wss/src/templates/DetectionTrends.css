@@ -32,9 +32,9 @@ body { margin: 0; font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Aria
   background: transparent;
 }
 
-/* Top section - 40vh */
+/* Top section - 100vh */
 .dt-top {
-  height: 60vh;
+  height: 100vh;
   display: flex;
   gap: 18px;
   align-items: stretch;
@@ -78,13 +78,13 @@ body { margin: 0; font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Aria
 
 .card-title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.2px;
   color: #dff3ea;
 }
 
-.card-title.small { font-size: 1rem; }
+.card-title.small { font-size: 24px; }
 
 .card-sub {
   margin-top: 6px;
@@ -166,7 +166,7 @@ body { margin: 0; font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Aria
 
 /* Bottom section - 90vh */
 .dt-bottom {
-  height: 90vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   gap: 12px;

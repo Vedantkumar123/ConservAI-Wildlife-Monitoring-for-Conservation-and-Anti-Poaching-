@@ -19,7 +19,7 @@ html,body,#root { height: 100%; margin: 0; font-family: Inter, Roboto, Arial, sa
 
 /* PAGE TOP (first 100vh) */
 .page-top {
-  height: 100vh;
+  height: 120vh;
   display: flex;
   flex-direction: column;
 }
@@ -36,7 +36,7 @@ html,body,#root { height: 100%; margin: 0; font-family: Inter, Roboto, Arial, sa
 .brand {
   margin: 0;
   letter-spacing: 2px;
-  font-size: 20px;
+  font-size: 30px;
   color: #e9f7f0;
   text-transform: uppercase;
 }
@@ -75,6 +75,7 @@ html,body,#root { height: 100%; margin: 0; font-family: Inter, Roboto, Arial, sa
   gap: 18px;
   flex: 1 1 auto;
   align-items: stretch;
+  min-height: 85vh;
 }
 
 /* Left large feed (60%) */
@@ -221,7 +222,7 @@ video {
   gap: 12px;
 }
 .powerbi-card {
-  min-height: 78px;
+  min-height: 150px;
   background: var(--card);
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.03);
@@ -230,14 +231,16 @@ video {
   justify-content: center;
   color: var(--muted);
 }
-.card-placeholder {
-  padding: 8px 12px;
-  font-size: 14px;
+.powerbi-card-image {
+  width: auto;
+  height: 140px;
+  border-radius: 12px;
+  object-fit: contain;
 }
 
 /* PAGE BOTTOM (analytics area) */
 .page-bottom {
-  height: 100vh;
+  height: 80vh;
   padding: 24px;
   display: flex;
   align-items: stretch;
@@ -258,7 +261,7 @@ video {
 /* Left and right halves */
 .analytics-left,
 .analytics-right {
-  width: 50%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -269,11 +272,11 @@ video {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px;
+  padding: 24px 32px;
 }
 .section-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 24px;
   color: #e9f7f0;
   font-weight: 600;
 }
@@ -281,7 +284,7 @@ video {
 /* Pill buttons on right */
 .btn-group {
   display: flex;
-  gap: 8px;
+  gap: 16px;
   align-items: center;
 }
 /* Pill buttons: white bg, black text; on hover -> blue bg, white text */
@@ -290,7 +293,7 @@ video {
   color: #000000;
   padding: 6px 10px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 16px;
   border: 1px solid rgba(0,0,0,0.08);
   cursor: pointer;
   transition: background-color 180ms ease, color 180ms ease, transform 120ms ease;
@@ -327,18 +330,6 @@ video {
   border-radius: 10px;
   background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.06));
   border: 1px dashed rgba(255,255,255,0.03);
-}
-.powerbi-placeholder {
-  width: 100%;
-  height: 100%;
-  min-height: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  background: rgba(255,255,255,0.01);
-  border-radius: 8px;
-  padding: 12px;
 }
 
 /* Responsive: stack columns vertically on smaller screens */
