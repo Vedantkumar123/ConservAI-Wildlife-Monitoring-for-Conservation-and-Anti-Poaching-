@@ -6,6 +6,10 @@ import video2 from "../assets/videos/video2.mp4";
 import video3 from "../assets/videos/video3.mp4";
 import video4 from "../assets/videos/video4.mp4";
 import video5 from "../assets/videos/video5.mp4";
+import card1 from "../assets/cards/card1.jpg";
+import card2 from "../assets/cards/card2.jpg";
+import card3 from "../assets/cards/card3.jpg";
+import card4 from "../assets/cards/card4.jpg";
 
 // Array of local video files
 const videoFiles = [video1, video2, video3, video4, video5];
@@ -300,9 +304,13 @@ export default function Homepage() {
 
           <section className="powerbi-section">
             <div className="powerbi-grid">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="powerbi-card">
-                  <div className="card-placeholder">Power BI Card {i}</div>
+              {[card1, card2, card3, card4].map((card, index) => (
+                <div key={index} className="powerbi-card">
+                  <img
+                    src={card}
+                    alt={`Power BI Card ${index + 1}`}
+                    className="powerbi-card-image"
+                  />
                 </div>
               ))}
             </div>

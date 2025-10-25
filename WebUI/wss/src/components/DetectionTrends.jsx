@@ -13,12 +13,12 @@ function getCurrentDateTime() {
 export default function DetectionTrends() {
   const [alerts, setAlerts] = useState(() => {
     const saved = localStorage.getItem("alerts");
-    return saved ? JSON.parse(saved).slice(0, 3) : [];
+    return saved ? JSON.parse(saved).slice(0, 5) : [];
   });
 
   const [detections, setDetections] = useState(() => {
     const saved = localStorage.getItem("detections");
-    return saved ? JSON.parse(saved).slice(-5) : [];
+    return saved ? JSON.parse(saved).slice(-10) : [];
   });
 
   // Save alerts & detections in localStorage whenever they change
@@ -84,7 +84,7 @@ export default function DetectionTrends() {
                     },
                     ...prev
                   ];
-                  return updated.slice(0, 3); // keep only last 3 alerts
+                  return updated.slice(0, 5); // keep only last 5 alerts
                 });
               }
             }
@@ -93,7 +93,7 @@ export default function DetectionTrends() {
           if (newRows.length > 0) {
             setDetections(prev => {
               const updated = [...prev, ...newRows];
-              return updated.slice(-5); // keep only last 5 detections
+              return updated.slice(-10); // keep only last 10 detections
             });
           }
         }
@@ -112,7 +112,6 @@ export default function DetectionTrends() {
         <Link to="/" className="btn">Home</Link>
       </div>
 
-      {/* Top: 40vh */}
       <div className="dt-top">
         <div className="dt-left-card">
           <div className="card-header">
@@ -141,7 +140,7 @@ export default function DetectionTrends() {
             {alerts.length === 0 && (
               <div className="placeholder-msg">No alerts yet</div>
             )}
-            {alerts.slice(0, 3).map((a, idx) => (
+            {alerts.slice(0, 5).map((a, idx) => (
               <div className="alert-item" key={idx}>
                 <div className="alert-side" aria-hidden="true" />
                 <div className="alert-content">
@@ -155,7 +154,6 @@ export default function DetectionTrends() {
         </div>
       </div>
 
-      {/* Bottom: 60vh */}
       <div className="dt-bottom">
         <div className="card-header card-header-bottom">
           <h2 className="card-title">Recent Detection</h2>
