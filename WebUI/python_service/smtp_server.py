@@ -6,14 +6,14 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from dotenv import load_dotenv
 from datetime import datetime, timedelta # Import datetime and timedelta
-
+why 
 # Load environment variables from .env file
 load_dotenv()
 
 # --- Email Configuration ---
 # It's highly recommended to use environment variables for security
-SENDER_EMAIL = os.getenv("SENDER_EMAIL", "saptarshiironman4512@gmail.com")
-SENDER_PASSWORD = os.getenv("SENDER_APP_PASSWORD", "tldulfbbhlvhliuu")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "mail")
+SENDER_PASSWORD = os.getenv("SENDER_APP_PASSWORD", "password")
 RECIPIENT_EMAIL = "add email"
 
 # --- NEW: Rate Limiting / Cooldown Configuration ---
@@ -21,7 +21,6 @@ RECIPIENT_EMAIL = "add email"
 ALERT_COOLDOWN = timedelta(minutes=1) 
 # This variable will store the timestamp of the last sent alert
 last_alert_time = None
-
 def send_alert_email(image_bytes: bytes, label: str, confidence: float, timestamp):
     """
     Connects to the SMTP server and sends an email with the alert details and image,
