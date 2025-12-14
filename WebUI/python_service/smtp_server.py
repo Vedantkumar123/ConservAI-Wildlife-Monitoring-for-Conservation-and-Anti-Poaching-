@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from dotenv import load_dotenv
 from datetime import datetime, timedelta # Import datetime and timedelta
-why 
+
 # Load environment variables from .env file
 load_dotenv()
 
